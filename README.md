@@ -3,7 +3,7 @@
 
 | Task      | Marius | Philip | Morgan | Karen |
 | --------- | ------ | ------ | ------ | ----- |
-| Task 1.1 | xyz | xyz | xyz | xyz |
+| Task 1.1 | xyz | xyz | Analyzed data using Python | Used QGIS to gather data |
 | Task 1.2 |     |     |     |     |
 | Task 1.3 |     |     |     |     |
 | Blank row |     |     |     |     |
