@@ -7,13 +7,14 @@ Created on Tue Sep  5 10:42:27 2023
 """
 
 # importing
-from IPython import get_ipython
+#from IPython import get_ipython
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+pd.options.mode.chained_assignment = None
 
 # housekeeping
-get_ipython().magic('reset -sf')
+#get_ipython().magic('reset -sf')
 plt.close('all')
 
 # =============================================================================
@@ -25,7 +26,11 @@ plt.close('all')
 # getting data
 riverNodes = pd.read_csv('riverNodes.csv', sep=",", decimal = ".")
 distances = pd.read_csv('distances.csv', sep=",", decimal=".")
-
+#renaming danish words
+new_column_name = 'Vandmaengd'
+distances = distances.rename(columns={distances.columns[12]: new_column_name})
+new_column_name2 = 'Bygvaerkst'
+distances = distances.rename(columns={distances.columns[7]: new_column_name2})
 # removing unnecessary data
 riverNodes.rename(columns={"vandfoering": "water flow (m^3/s)"}, inplace=True)
 distances.rename(columns={"BI-5 (kg)": "Biological oxygen demand, 5 days (kg)"}, inplace=True)
@@ -59,15 +64,19 @@ pollutants = pollutants.sum()
 meanflow = riverNodes.loc[:,'water flow (m^3/s)'].mean()
 months = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december']
 
-# looping through the month column, pulling out values for each month, 
-# calculating the average, and then putting it in the empty array I made
+
+# Convert the 'maaned' column to strings
+riverNodes['maaned'] = riverNodes['maaned'].astype(str)
+#looping through the month column, pulling out values for each month, 
+# calculating the average, and then putting it in the empty array I made#
 monthflows=pd.DataFrame(np.zeros([12,2],dtype=float),columns=['month','flow (m^3/s)'])
 for i in range(len(months)):
     monthflows['month'][i] = months[i]
     idx = riverNodes['maaned'].str.contains(months[i])
     data = riverNodes[idx]
     data = data.reset_index(drop=True)
-    monthflows['flow (m^3/s)'][i] = data.loc[:,'water flow (m^3/s)'].mean()
+    monthflows['flow (m^3/s)'][i] = data['water flow (m^3/s)'].mean()
+
 
 # The average flow of the river in Moelle Aa is 0.24 m3/s. Highest month is Jan, lowest August
 
@@ -117,8 +126,10 @@ for i in range(len(distances)):
     kgnitro = distances['Total-N (k'][i]
     mgnitro = kgnitro*1000000
     Lflow = distances['Vandmaengd'][i]*1000
+    # avoid zero division
+    if (Lflow == 0):
+        Lflow += 1e-8
     CSOnitro['nitrogen (mg/L)'][i] = mgnitro/Lflow
-
 meanNinlake = lakeData['nitrogen (mg/L)'].mean() # mg/L
 flowfromlakeL = avgyear*1000 # L/yr
 nitrofromlake = (meanNinlake*flowfromlakeL)*(1e-6) # kg/yr
