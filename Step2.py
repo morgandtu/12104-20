@@ -148,7 +148,59 @@ ibpercentile = 1.8 # in mcg/L, using median to represent most common value
 # =============================================================================
 # STEP 2
 # =============================================================================
+riverNodes = riverNodes.tail(-1)
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+pd.options.mode.chained_assignment = None
+
+# housekeeping
+#get_ipython().magic('reset -sf')
+plt.close('all')
+
+# getting data
+riverNodes = pd.read_csv('riverNodes.csv', sep=",", decimal = ".")
+distances = pd.read_csv('distances.csv', sep=",", decimal=".")
+#renaming danish words
+new_column_name = 'Vandmaengd'
+distances = distances.rename(columns={distances.columns[12]: new_column_name})
+new_column_name2 = 'Bygvaerkst'
+distances = distances.rename(columns={distances.columns[7]: new_column_name2})
+# removing unnecessary data
+riverNodes.rename(columns={"vandfoering": "water flow (m^3/s)"}, inplace=True)
+distances.rename(columns={"BI-5 (kg)": "Biological oxygen demand, 5 days (kg)"}, inplace=True)
+riverNodes.head(5)
+riverNodes['beregningspunktlokalid'].unique()
+distances.head(5)
+# Filter rows where 'registreringfra' contains either 'Novana_Model_MOELLEAA_DK1_13500' or 'Novana_Model_MOELLEAA_DK1_3687'
+idxMoelleAA = riverNodes['beregningspunktlokalid'].str.contains('MOELLEAA')
+riverNodes = riverNodes[idxMoelleAA]
+riverNodes = riverNodes.reset_index()
+riverNodesYY = riverNodes[riverNodes["aar"]==2011]
+riverNodesMM = riverNodesYY[riverNodes["maaned"]=="januar"]
+idxUp= riverNodesMM['beregningspunktlokalid'].str.contains('3687')
+idxDown= riverNodesMM['beregningspunktlokalid'].str.contains('13500')
+#finding the index which corresponds to the inlet
+idxUp_num = idxUp.where(idxUp == True).dropna().index
+#finding the index which corresponds to the outlet
+idxDown_num = idxDown.where(idxDown == True).dropna().index
+#trasforming Int64Index type index to an integer to create an array from the index difference
+idxUp_num = idxUp_num[0]
+idxDown_num = idxDown_num[0]
+indexdiff= abs(idxUp_num - idxDown_num)
+
+idxUpDown = idxUp
+for i in range(idxUp_num, idxDown_num+1):
+    idxUpDown[i] = True
+riverQ = riverNodesMM[idxUpDown]
+riverQ = riverQ[['water flow (m^3/s)', 'beregningspunktlokalid', 'X', 'Y']]
+riverQ.reset_index()
+riverQ['distance'] = np.NaN
+riverQ['CSOflow'] = np.NaN
+
+
+RiverC = 
 
 
 
