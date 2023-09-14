@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import os
-os.chdir('C:/Users/mariu/Documents/Python Scripts/Environmental modelling/Assignment 1')
 pd.options.mode.chained_assignment = None
 
 # housekeeping
@@ -94,6 +93,7 @@ riverC['concentration'] = 0
 # starting the simple advection-dilution model 
 riverC['concentration'][0] = 0.2*(10**(-6)) # initial concentration in the stream
 CSO_conc = 1.7*(10**(-6)) # (g/L) assign the MP concentration in the CSO water
+riverQ['CSOflow'][0] = 0
 theta = 2.31 # %
 t_CSO = 4.3 # hr
 
@@ -124,29 +124,27 @@ indices_where_appears = []
 for cso_name in namesCSO['name']:
     # Use str.contains to create a boolean mask
     mask = distances['HubName'].str.contains(cso_name)
-    
     # Use the mask to get the indices where the string appears
     matching_indices = distances[mask].index.tolist()
-    
     # Add the matching indices to the list
     indices_where_appears.extend(matching_indices)
 
 # The list indices_where_appears now contains the indices in distances where the strings from namesCSO appear.
-
     
     if len(idxCSO) > 0:
         CSO_flux = 0 #create an empty value for the MP flux from the CSO
         CSO_Qtot = 0
-        for j in range(0,len(idxCSO)-2): #loop over the connected CSOs
-            V_CSO = distances["Vandmaengd"][idxCSO[j]]*theta # calculate the volume of the single discharge event
+        for j in range(len(indices_where_appears)): #loop over the connected CSOs
+            V_CSO = distances["Vandmaengd"][indices_where_appears[j]]*theta # calculate the volume of the single discharge event
+            print(V_CSO)
+            print('--')
             Q_CSO = V_CSO/t_CSO # calculate the flow of the single discharge event
             CSO_flux = CSO_flux+Q_CSO*CSO_conc
             CSO_Qtot = CSO_Qtot+Q_CSO
         riverQ['CSOflow'][i] = riverQ['CSOflow'][i-1]+CSO_Qtot
         # calculate concentration for the node
         riverC['concentration'][i] = (riverC['concentration'][i-1]*(riverQ['water flow (m^3/s)'][i-1]+
-        riverQ['CSOflow'][i-1])+ CSO_flux)/ (riverQ['water flow (m^3/s)'][i]+
-        riverQ['CSOflow'][i])
+        riverQ['CSOflow'][i-1])+ CSO_flux)/ (riverQ['water flow (m^3/s)'][i]+riverQ['CSOflow'][i])
     else: # there are no CSO connected to the node
         # calculate flow added to the river by the CSO (no addition)
         riverQ['CSOflow'][i]= riverQ['CSOflow'][i-1]
