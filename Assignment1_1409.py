@@ -180,26 +180,56 @@ riverC['concentration'] = riverC['concentration'].astype(float)
 # calculating distances
 stringName = riverQ['node ID'].str.split('_').str[-1].astype(float)
 riverQ['distance']= stringName - 3687
+riverC['distance'] = riverQ['distance']
 
 # the simple model: advection-dilution
 
 # assigning values
-riverC['concentration'][0] = 0.2*(10**(-6)) # dummy value
+riverC['concentration'][0] = 0.02
 CSO_conc = 1.7*(10**(-6)) # g/L
 theta = 2.31 # %
 t_CSO = 4.3 # hr
 EQS = 1700*(10**(-6)) # g/L
 
+# %% IGNORE THIS!!!
 # the model
 # getting CSO indices
+
+# CSOname = pd.DataFrame(np.zeros([len(riverQ),1],dtype=float),columns=['name'])
+# for i in range(1,idxDiff):
+#     CSOSearch = CSOData['HubName'].str.contains(riverQ['node ID'][i])
+#     isThereCSO = CSOSearch.sum() == 1
+#     if isThereCSO:
+#         CSOname['name'][i] = riverQ["node ID"].iloc[i]
+#     idxCSO = (CSOname[CSOname['name'] != 0]).index
+#     # running the model
+#     if len(idxCSO) > 0:
+#         CSO_flux = 0
+#         CSO_Qtot = 0
+#         for j in range(len(idxCSO)):
+#             V_CSO = CSOData['Vandmaengd'][idxCSO[j]] * theta
+#             Q_CSO = V_CSO/t_CSO
+#             CSO_flux = CSO_flux + Q_CSO*CSO_conc
+#             CSO_Qtot = CSO_Qtot + Q_CSO
+#         riverQ['Qadded'][i] = riverQ['Qadded'][i-1] + CSO_Qtot
+#         riverC['concentration'][i] = (riverC['concentration'][i-1]*riverQ['flow'][i-1] + riverQ['Qadded'][i-1] + CSO_flux)/(riverQ['flow'][i] + riverQ['Qadded'][i])
+#     else:
+#         riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
+#         riverC['concentration'][i] = riverC['concentration'][i-1]*(riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ[['flow'][i] + riverQ['Qadded'][i]])
+# EQS_exc['concentration'] = riverC['concentration'] > EQS
+
+
+# %%
+
+# setting up empty matrix for CSOs
 CSOname = pd.DataFrame(np.zeros([len(riverQ),1],dtype=float),columns=['name'])
-for i in range(1,idxDiff):
-    CSOSearch = CSOData['HubName'].str.contains(riverQ['node ID'][i])
-    isThereCSO = CSOSearch.sum() == 1
+for i in range(1,len(CSOData)): # looping through CSO dataframe
+    CSOSearch = riverQ['node ID'].str.contains(CSOData['HubName'][i]) # selecting for where any node ID in riverQ matches the i-th hubname in CSO
+    isThereCSO = CSOSearch.sum() == 1 # setting a boolean to 1 if there is a CSO
     if isThereCSO:
-        CSOname['name'][i] = riverQ["node ID"].iloc[i]
-    idxCSO = (CSOname[CSOname['name'] != 0]).index
-     # running the model
+        CSOname['name'][i] = riverQ["node ID"].iloc[i] # assigning the names of the matching CSOs to a dataframe
+    idxCSO = (CSOname[CSOname['name'] != 0]).index # getting the indices **in CSOData, not in riverQ!!!**
+    # running the model--all of this is from the pseudocode
     if len(idxCSO) > 0:
         CSO_flux = 0
         CSO_Qtot = 0
@@ -217,9 +247,14 @@ EQS_exc['concentration'] = riverC['concentration'] > EQS
 
 
 
+plt.figure(1)
+plt.plot(riverC['distance'],riverC['concentration'])
+plt.xlabel('distance from the lake')
+plt.ylabel('concentration of ibuprofen (g/L)')
 
-
-
-
+plt.figure(2)
+plt.plot(riverC['distance'],EQS_exc['concentration'])
+plt.xlabel('distance from the lake')
+plt.ylabel('concentration of ibuprofen (g/L)')
 
 
