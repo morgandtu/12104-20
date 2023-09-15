@@ -263,5 +263,7 @@ plt.ylabel('concentration of ibuprofen (g/L)')
 
 plt.figure(2)
 plt.plot(riverC['distance'],EQS_exc['concentration'])
+plt.xlabel('distance from the lake')
+plt.ylabel('concentration of ibuprofen (g/L)')
 
 
