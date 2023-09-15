@@ -190,10 +190,10 @@ riverC['distance'] = riverQ['distance']
 
 # assigning values
 riverC['concentration'][0] = 0.02
-CSO_conc = 1.7*(10**(-6)) # g/L
-theta = 2.31 # %
-t_CSO = 4.3 # hr
-EQS = 1700*(10**(-6)) # g/L
+CSO_conc = 1.7*1000 # mcg/m^3
+theta = 0.0231 # %
+t_CSO = 4.3*3600 # seconds
+EQS = 1700*1000 # mcg/m^3
 
 # %% IGNORE THIS!!!
 # the model
@@ -259,11 +259,11 @@ EQS_exc = EQS_exc.dropna(axis = 0)
 plt.figure(1)
 plt.plot(riverC['distance'],riverC['concentration'])
 plt.xlabel('distance from the lake')
-plt.ylabel('concentration of ibuprofen (g/L)')
+plt.ylabel('concentration of ibuprofen (mcg/m^3)')
 
 plt.figure(2)
 plt.plot(riverC['distance'],EQS_exc['concentration'])
 plt.xlabel('distance from the lake')
-plt.ylabel('concentration of ibuprofen (g/L)')
+plt.ylabel('concentration of ibuprofen (mcg/m^3))')
 
 
