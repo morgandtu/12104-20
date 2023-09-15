@@ -176,6 +176,10 @@ riverQ['flow'] = riverData['vandfoering'].astype(float)
 riverQ['Qadded'] = riverQ['Qadded'].astype(float)
 riverQ['flow'] = riverQ['flow'].astype(float)
 riverC['concentration'] = riverC['concentration'].astype(float)
+EQS_exc['X'] = riverC['X']
+EQS_exc['Y'] = riverC['Y']
+EQS_exc['node ID'] = riverC['node ID']
+EQS_exc['distance'] = riverC['distance']
 
 # calculating distances
 stringName = riverQ['node ID'].str.split('_').str[-1].astype(float)
@@ -243,9 +247,14 @@ for i in range(1,len(CSOData)): # looping through CSO dataframe
     else:
         riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
         riverC['concentration'][i] = riverC['concentration'][i-1]*(riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ[['flow'][i] + riverQ['Qadded'][i]])
+riverC = riverC[riverC['concentration'] != 0]
+
 EQS_exc['concentration'] = riverC['concentration'] > EQS
-
-
+EQS_exc['X'] = riverC['X']
+EQS_exc['Y'] = riverC['Y']
+EQS_exc['node ID'] = riverC['node ID']
+EQS_exc['distance'] = riverC['distance']
+EQS_exc = EQS_exc.dropna(axis = 0)
 
 plt.figure(1)
 plt.plot(riverC['distance'],riverC['concentration'])
@@ -254,7 +263,5 @@ plt.ylabel('concentration of ibuprofen (g/L)')
 
 plt.figure(2)
 plt.plot(riverC['distance'],EQS_exc['concentration'])
-plt.xlabel('distance from the lake')
-plt.ylabel('concentration of ibuprofen (g/L)')
 
 
