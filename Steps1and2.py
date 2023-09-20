@@ -11,6 +11,7 @@ Created on Tue Sep 19 12:51:56 2023
 # importing
 from IPython import get_ipython
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 
@@ -43,13 +44,19 @@ pollutants = pollutants.sum()
 
 meanflow = riverData.loc[:,'vandfoering'].mean()
 months = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december']
+engmonths = ['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec']
+
+for i in range(len(riverData)):
+    for j in range(len(months)):
+        if riverData['maaned'][i] == months[j]:
+            riverData['maaned'][i] = engmonths[j]
 
 # looping through the month column, pulling out values for each month, 
 # calculating the average, and then putting it in the empty array I made
 monthflows=pd.DataFrame(np.zeros([12,2],dtype=float),columns=['month','flow (m^3/s)'])
-for i in range(len(months)):
-    monthflows['month'][i] = months[i]
-    idx = riverData['maaned'].str.contains(months[i])
+for i in range(len(engmonths)):
+    monthflows['month'][i] = engmonths[i]
+    idx = riverData['maaned'].str.contains(engmonths[i])
     data = riverData[idx]
     data = data.reset_index(drop=True)
     monthflows['flow (m^3/s)'][i] = data.loc[:,'vandfoering'].mean()
@@ -97,10 +104,10 @@ nitrofromCSOs = CSOData['Total-N (k'].sum() # kg
 # %% Step 1 plots 
 
 # Create a histogram
-plt.figure(figsize=(10, 6))  # Adjust the figure size as needed for your preference
+plt.figure(figsize=(12, 6))  # Adjust the figure size as needed for your preference
 plt.bar(monthflows['month'], monthflows['flow (m^3/s)'], color='skyblue')
 plt.xlabel('Month')
-plt.ylabel('Flow (m^3/s)')
+plt.ylabel('Flow $(m^3/s)$')
 plt.title('Monthly Flow Data')
 plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
 
@@ -108,7 +115,7 @@ plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
 for i, val in enumerate(monthflows['flow (m^3/s)']):
     plt.text(i, val, f'{val:.3f}', va='bottom', ha='center')
 
-plt.axhline(meanflow, color='grey', linestyle='--', label=f'Yearly Mean ({meanflow:.3f} m^3/s)')
+plt.axhline(meanflow, color='grey', linestyle='--', label=f'Yearly Mean ({meanflow:.3f} $m^3/s)$')
 
 # Show the plot
 plt.legend()
@@ -121,7 +128,7 @@ plt.ylabel('Nitrogen Concentration (mg/L)')
 plt.title('Nitrogen Levels in the Lake Over Time')
 plt.grid(True)
 
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(16, 7))
 plt.barh(CSOnitro['CSO'], CSOnitro['nitrogen (kg)'], color='skyblue')
 plt.xlabel('Nitrogen Concentration (kg)')
 plt.ylabel('CSO')
@@ -131,12 +138,18 @@ plt.show()
 
 labels = ['Lake', 'CSOs']
 sizes = [nitrofromlake, nitrofromCSOs]
+sizes2 = [avgyear, annualCSOwaterflow]
 colors = ['lightblue', 'lightcoral']
 
-plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
-plt.title('Nitrogen Contribution: Lake vs. CSOs')
-plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-plt.show()
+# subplot pie charts
+fig = plt.figure(figsize=(14,7))
+ax1 = fig.add_subplot(121)
+ax1.pie(sizes2, labels=labels, colors=colors, autopct='%1.1f%%')
+plt.title('Nitrogen and Water Contribution: Lake vs. CSOs',loc='right')
+ax2 = fig.add_subplot(122)
+ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%')
+
+# plt.show()
 
 # -----UPDATE FROM HERE UP-----
 
@@ -150,7 +163,7 @@ ibpercentile = 1.8 # in mcg/L, using median to represent most common value
 # data preparation
 riverData = riverData[riverData['beregningspunktlokalid'].str.contains('MOELLEAA')] # selecting Moelle Aa data
 riverData = riverData[riverData['aar']==2019] # selecting most recent data
-riverData = riverData[riverData['maaned'].str.contains('januar')] # selecting highest flow data
+riverData = riverData[riverData['maaned'].str.contains('jan')] # selecting highest flow data
 # selecting upstream (outlet of lake) and downstream (outlet to sea) data
 idxUp = riverData.index[riverData['beregningspunktlokalid'].str.contains('3687')][0]
 # what this does is grab the row of riverData that contains that string, put it in a row, and take its index as an integer
@@ -237,14 +250,9 @@ def model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0):
     EQS = 1700*1000 # mcg/m^3
 
     # setting up empty matrix for CSOs
-    CSOname = pd.DataFrame(np.zeros([len(riverQ),1],dtype=float),columns=['name'])
-    for i in range(1,len(CSOData)): # looping through CSO dataframe
-        CSOSearch = riverQ['node ID'].str.contains(CSOData['HubName'][i]) # selecting for where any node ID in riverQ matches the i-th hubname in CSO
-        isThereCSO = CSOSearch.sum() == 1 # setting a boolean to 1 if there is a CSO
-        if isThereCSO:
-            CSOname['name'][i] = riverQ["node ID"].iloc[i] # assigning the names of the matching CSOs to a dataframe
-        idxCSO = (CSOname[CSOname['name'] != 0]).index # getting the indices **in CSOData, not in riverQ!!!**
-        # running the model--all of this is from the pseudocode
+    for i in range (1,len(riverQ)):
+        idxCSO = CSOData['HubName'].str.contains(riverQ['node ID'][i])
+        idxCSO = idxCSO.index[idxCSO == True].tolist()
         if len(idxCSO) > 0:
             CSO_flux = 0
             CSO_Qtot = 0
@@ -257,7 +265,8 @@ def model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0):
             riverC['concentration'][i] = (riverC['concentration'][i-1]*riverQ['flow'][i-1] + riverQ['Qadded'][i-1] + CSO_flux)/(riverQ['flow'][i] + riverQ['Qadded'][i])
         else:
             riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
-            riverC['concentration'][i] = riverC['concentration'][i-1]*(riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ[['flow'][i] + riverQ['Qadded'][i]])
+            riverC['concentration'][i] = riverC['concentration'][i-1] * (riverQ['flow'][i-1] * riverQ['Qadded'][i-1])/(riverQ['flow'][i] + riverQ['Qadded'][i])
+
     riverC = riverC[riverC['concentration'] != 0]
     riverC['flow'] = riverQ['flow'] + riverQ['Qadded']
     EQS_exc['concentration'] = riverC['concentration'] > EQS
