@@ -31,6 +31,7 @@ CSOData = CSOData.drop(['Ejer'], axis=1)
 CSOData = CSOData.drop(['Idriftsat'], axis=1)
 CSOData = CSOData.drop(['Nedlagt'], axis=1)
 CSOData = CSOData.drop(['Antal over'], axis=1)
+CSOData['Navn'][0] = 'Afledning'
 
 # finding mean distances in m from CSO
 meandistm = CSOData.loc[:,'HubDist'].mean()*1000
@@ -79,13 +80,65 @@ CSOnitromg = CSOData.loc[:,"Total-N (k"].sum()*1000000
 CSOmgnitroperL = CSOnitromg/(annualCSOwaterflow*1000)
 
 # looping through CSO dataset to find nitrogen contribution from each CSO
-CSOnitro = pd.DataFrame(np.zeros([27,2],dtype=float),columns=['CSO','nitrogen (mg/L)'])
+CSOnitro = pd.DataFrame(np.zeros([27,3],dtype=float),columns=['CSO','nitrogen (kg)','concentration (mg/L)'])
 for i in range(len(CSOData)):
     CSOnitro['CSO'][i] = CSOData['Navn'][i]
+    CSOnitro['nitrogen (kg)'][i] = CSOData['Total-N (k'][i]
     kgnitro = CSOData['Total-N (k'][i]
     mgnitro = kgnitro*1000000
     Lflow = CSOData['Vandmængd'][i]*1000
-    CSOnitro['nitrogen (mg/L)'][i] = mgnitro/Lflow
+    CSOnitro['concentration (mg/L)'][i] = mgnitro/Lflow
+    
+meanNinlake = lakeData['nitrogen (mg/L)'].mean() # mg/L
+flowfromlakeL = avgyear*1000 # L/yr
+nitrofromlake = (meanNinlake*flowfromlakeL)*(1e-6) # kg/yr
+nitrofromCSOs = CSOData['Total-N (k'].sum() # kg
+
+# %% Step 1 plots 
+
+# Create a histogram
+plt.figure(figsize=(10, 6))  # Adjust the figure size as needed for your preference
+plt.bar(monthflows['month'], monthflows['flow (m^3/s)'], color='skyblue')
+plt.xlabel('Month')
+plt.ylabel('Flow (m^3/s)')
+plt.title('Monthly Flow Data')
+plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+
+# Add labels to the bars (optional)
+for i, val in enumerate(monthflows['flow (m^3/s)']):
+    plt.text(i, val, f'{val:.3f}', va='bottom', ha='center')
+
+plt.axhline(meanflow, color='grey', linestyle='--', label=f'Yearly Mean ({meanflow:.3f} m^3/s)')
+
+# Show the plot
+plt.legend()
+plt.tight_layout()
+
+plt.figure(figsize=(10, 6))
+plt.plot(lakeData['year'], lakeData['nitrogen (mg/L)'], marker='o', linestyle='-')
+plt.xlabel('Year')
+plt.ylabel('Nitrogen Concentration (mg/L)')
+plt.title('Nitrogen Levels in the Lake Over Time')
+plt.grid(True)
+
+plt.figure(figsize=(12, 6))
+plt.barh(CSOnitro['CSO'], CSOnitro['nitrogen (kg)'], color='skyblue')
+plt.xlabel('Nitrogen Concentration (kg)')
+plt.ylabel('CSO')
+plt.title('Nitrogen Contribution from Each CSO')
+plt.gca().invert_yaxis()  # Invert the y-axis for better readability
+plt.show()
+
+labels = ['Lake', 'CSOs']
+sizes = [nitrofromlake, nitrofromCSOs]
+colors = ['lightblue', 'lightcoral']
+
+plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+plt.title('Nitrogen Contribution: Lake vs. CSOs')
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+plt.show()
+
+# -----UPDATE FROM HERE UP-----
 
 # %% task 1.3
 
@@ -279,6 +332,6 @@ C0 = 0.02
 
 output = model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0)
 output.drop(columns=['distance'], inplace=True)
-output.to_csv('fileWithModelResults.csv')
+#output.to_csv('fileWithModelResults.csv')
 
 
