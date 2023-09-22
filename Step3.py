@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import os
-from Step2 import theta,CSOname,t_CSO,CSO_conc,CSOData,riverC,riverQ
-
+from Step2 import theta,t_CSO,CSO_conc,CSOData,riverC,riverQ,EQS_exc
+C0=0
 os.chdir('C:/Users/mariu/Documents/Python Scripts/Environmental modelling/Assignment 1')
 pd.options.mode.chained_assignment = None
 
@@ -29,45 +29,68 @@ scale = (x2 - x1) / (p2ppf - p1ppf)
 mean = ((x1 * p2ppf) - (x2 * p1ppf)) / (p2ppf - p1ppf)
 
 Al_dist= lognorm(s=scale, scale=np.exp(mean))
-Sample1e2 = Al_dist.rvs(size=int(1e2))
-Sample1e3 = Al_dist.rvs(size=int(1e3))
-Sample1e4 = Al_dist.rvs(size=int(1e4))
-print('%0.f,%0.f,%0.f' % (np.mean(Sample1e2),np.percentile(Sample1e2,25),np.percentile(Sample1e2,77)))
-print('%0.f,%0.f,%0.f' % (np.mean(Sample1e2),np.percentile(Sample1e3,25),np.percentile(Sample1e3,77)))
-print('%0.f,%0.f,%0.f' % (np.mean(Sample1e2),np.percentile(Sample1e4,25),np.percentile(Sample1e4,77)))
 Sample1e2 = np.random.lognormal(mean=mean, sigma=scale, size=int(1e2))
 
 riverC[1]=0
-def riverModel(riverQ,CSOData,CSO_conc):
-    for i in range(1,len(CSOData)): # looping through CSO dataframe
-        CSOSearch = riverQ['node ID'].str.contains(CSOData['HubName'][i]) # selecting for where any node ID in riverQ matches the i-th hubname in CSO
-        isThereCSO = CSOSearch.sum() == 1 # setting a boolean to 1 if there is a CSO
-        if isThereCSO:
-            CSOname['name'][i] = riverQ["node ID"].iloc[i] # assigning the names of the matching CSOs to a dataframe
-        idxCSO = (CSOname[CSOname['name'] != 0]).index # getting the indices **in CSOData, not in riverQ!!!**
-        # running the model--all of this is from the pseudocode
-        if len(idxCSO) > 0:
-            CSO_flux = 0
-            CSO_Qtot = 0
-            for j in range(len(idxCSO)):
-                V_CSO = CSOData['Vandmængd'][idxCSO[j]] * theta
-                Q_CSO = V_CSO/t_CSO
-                CSO_flux = CSO_flux + Q_CSO*CSO_conc
-                CSO_Qtot = CSO_Qtot + Q_CSO
-            riverQ['Qadded'][i] = riverQ['Qadded'][i-1] + CSO_Qtot
-            riverC['concentration'][i] = (riverC['concentration'][i-1]*riverQ['flow'][i-1] + riverQ['Qadded'][i-1] + CSO_flux)/(riverQ['flow'][i] + riverQ['Qadded'][i])
-        else:
-            riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
-            riverC['concentration'][i] = riverC['concentration'][i-1]*(riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ[['flow'][i] + riverQ['Qadded'][i]])
-    return riverC
+riverC = riverC.reset_index(drop=True)
 
+from Step2 import model
 
 MC=10
+MCsim=np.zeros([len(riverQ),MC])
 
-MCsim=np.zeros([44,MC])
-for i in range(1,MC):
-    out=riverModel(riverQ,CSOData,CSO_conc)
-    MCsim[:,i]=out['conc']
+for i in range(MC):
+    out=model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0)
+    MCsim[:,i]=out['concentration']
+
+
+    
+CSO_conc=Al_dist.rvs(size=MC)
+print(CSO_conc)
+for i in range(MC):
+    out=model(riverC, riverQ, EQS_exc, CSOData, CSO_conc[i], C0)
+    MCsim[:,i]=out['concentration']
+
+
+# CSO_flux=0
+# selected_values = CSOData[CSOData['Vandmængd'] != 0]['Vandmængd']
+# selected_values = selected_values.reset_index(drop=True)
+
+# for i in range(1,len(selected_values)):
+#     V_CSO=selected_values[i]/theta
+#     Q_CSO=V_CSO/t_CSO
+#     CSO_conc=Al_dist.rvs(size=MC)
+#     CSO_flux=CSO_flux+Q_CSO*CSO_conc
+    
+    
+    
+q05=np.percentile(MCsim,5,axis=1)
+q50=np.percentile(MCsim,50,axis=1)
+q95=np.percentile(MCsim,95,axis=1)
+
+t=MCsim[:,0]
+plt.figure()
+plt.rcParams.update({'font.size':20})
+
+ax1=plt.subplot(2,1,1)
+plt.plot(t,color='green',linestyle='-',label='deterministic')
+plt.legend()
+plt.grid()
+ax1.set_xlabel('time [d]')
+ax1.set_ylabel('Concentration [mg/l]')
+
+ax2=plt.subplot(2,1,2)
+
+for i in range (MC):
+    plt.plot(MCsim[:,i],color=(0.7,0.7,0.7),linestyle='-')
+plt.plot(q05,color='red',linestyle='--',label='5% percentile')
+plt.plot(q50,color='blue',linestyle='-',label='median')
+plt.plot(q95,color='red',linestyle='-',label='95% percentile')
+
+plt.legend()
+plt.grid()
+plt.show()
+
 
 
 
