@@ -39,17 +39,16 @@ meandistm = CSOData.loc[:,'HubDist'].mean()*1000
 # finding annual water flow in m^3
 annualCSOwaterflow = CSOData.loc[:,'Vandmængd'].sum()
 # finding pollutants in kg
-pollutants = CSOData.iloc[:,5:8].sum()
-pollutants = pollutants.sum()
+pollutants = CSOData['Total-N (k'].sum() + CSOData['Total-P (k'].sum() + CSOData['BI-5 (kg)'].sum()
 
 meanflow = riverData.loc[:,'vandfoering'].mean()
 months = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december']
 engmonths = ['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec']
 
-for i in range(len(riverData)):
-    for j in range(len(months)):
-        if riverData['maaned'][i] == months[j]:
-            riverData['maaned'][i] = engmonths[j]
+# for i in range(len(riverData)):
+#     for j in range(len(months)):
+#         if riverData['maaned'][i] == months[j]:
+#             riverData['maaned'][i] = engmonths[j]
 
 # looping through the month column, pulling out values for each month, 
 # calculating the average, and then putting it in the empty array I made
@@ -127,8 +126,9 @@ plt.xlabel('Year')
 plt.ylabel('Nitrogen Concentration (mg/L)')
 plt.title('Nitrogen Levels in the Lake Over Time')
 plt.grid(True)
+CSOnitro = CSOnitro[CSOnitro['nitrogen (kg)'] != 0]
 
-plt.figure(figsize=(16, 7))
+plt.figure(figsize=(6, 3))
 plt.barh(CSOnitro['CSO'], CSOnitro['nitrogen (kg)'], color='skyblue')
 plt.xlabel('Nitrogen Concentration (kg)')
 plt.ylabel('CSO')
@@ -142,12 +142,12 @@ sizes2 = [avgyear, annualCSOwaterflow]
 colors = ['lightblue', 'lightcoral']
 
 # subplot pie charts
-fig = plt.figure(figsize=(14,7))
+fig = plt.figure(figsize=(8,4),dpi=144)
 ax1 = fig.add_subplot(121)
-ax1.pie(sizes2, labels=labels, colors=colors, autopct='%1.1f%%')
-plt.title('Nitrogen and Water Contribution: Lake vs. CSOs',loc='right')
 ax2 = fig.add_subplot(122)
-ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%')
+ax1.pie(sizes2, labels=labels, colors=colors, autopct='%1.1f%%',shadow=True)
+ax2.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%',shadow=True)
+plt.suptitle('Nitrogen and Water Contribution: Lake vs. CSOs')
 
 # plt.show()
 
@@ -301,7 +301,7 @@ for subplot_num, c in enumerate(concentrations):
         output = model(riverC, riverQ, EQS_exc, CSOData, c, i_c)
         plt.subplot(2, 2, subplot_num+1)
         plt.plot(output['distance'], output['concentration'], marker='o', linestyle='-', label=f'CSO conc={c}, Initial CSO conc={i_c}')
-    plt.title(f'CSO conc={i_c}')
+    plt.suptitle('Various Concentrations Along the Stream')
     plt.legend()
     plt.xlabel('Distance from the lake (m)')
     plt.ylabel('Concentration of ibuprofen (mcg/m^3)')
