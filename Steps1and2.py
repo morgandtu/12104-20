@@ -228,9 +228,11 @@ for i in range (1,len(riverQ)):
             CSO_Qtot = CSO_Qtot + Q_CSO
         riverQ['Qadded'][i] = riverQ['Qadded'][i-1] + CSO_Qtot
         riverC['concentration'][i] = (riverC['concentration'][i-1]*riverQ['flow'][i-1] + riverQ['Qadded'][i-1] + CSO_flux)/(riverQ['flow'][i] + riverQ['Qadded'][i])
+        print(riverC['concentration'][i])
     else:
         riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
-        riverC['concentration'][i] = riverC['concentration'][i-1] * (riverQ['flow'][i-1] * riverQ['Qadded'][i-1])/(riverQ['flow'][i] + riverQ['Qadded'][i])
+        riverC['concentration'][i] = riverC['concentration'][i-1] * (riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ['flow'][i] + riverQ['Qadded'][i])
+        print(riverC['concentration'][i])
 
 EQS_exc['concentration'] = riverC['concentration'] > EQS
 EQS_exc['X'] = riverC['X']
@@ -265,7 +267,7 @@ def model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0):
             riverC['concentration'][i] = (riverC['concentration'][i-1]*riverQ['flow'][i-1] + riverQ['Qadded'][i-1] + CSO_flux)/(riverQ['flow'][i] + riverQ['Qadded'][i])
         else:
             riverQ['Qadded'][i] = riverQ['Qadded'][i-1]
-            riverC['concentration'][i] = riverC['concentration'][i-1] * (riverQ['flow'][i-1] * riverQ['Qadded'][i-1])/(riverQ['flow'][i] + riverQ['Qadded'][i])
+            riverC['concentration'][i] = riverC['concentration'][i-1] * (riverQ['flow'][i-1] + riverQ['Qadded'][i-1])/(riverQ['flow'][i] + riverQ['Qadded'][i])
 
     riverC = riverC[riverC['concentration'] != 0]
     riverC['flow'] = riverQ['flow'] + riverQ['Qadded']
@@ -320,12 +322,12 @@ plt.show()
 
 # plot 3
 # EQS value
-eqs_value = 1700  # Replace with the actual EQS value
+eqs_value = 1700*1000  # mcg/m^3
 
 # Plot: Concentration of Ibuprofen Exceeding EQS vs. Distance from the Lake
 plt.figure(figsize=(10, 6))
 plt.plot(riverC['distance'], riverC['concentration'], color='red', marker='o', linestyle='-', markersize=5, label='Concentration')
-plt.axhline(eqs_value, color='blue', linestyle='--', label=f'EQS = {eqs_value} mcg/m^3')
+plt.axhline(eqs_value, color='blue', linestyle='--', label=f'EQS = 1700000 mcg/m^3')
 plt.xlabel('Distance from the Lake')
 plt.ylabel('Concentration of Ibuprofen (mcg/m^3)')
 plt.title('Concentration of Ibuprofen Exceeding EQS vs. Distance from the Lake')
