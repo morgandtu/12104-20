@@ -343,4 +343,7 @@ output = model(riverC, riverQ, EQS_exc, CSOData, CSO_conc, C0)
 output.drop(columns=['distance'], inplace=True)
 #output.to_csv('fileWithModelResults.csv')
 
+# %% Step 3 from Marius and Philip
+
+
 
