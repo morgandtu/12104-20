@@ -25,15 +25,16 @@ def reversible(t,c):
     mD = c[0]
     mA = c[1]
     mS = c[2]
+    
     # part a
     dmDdt = -kDA*mD + kAD*mA
     dmAdt = -kAS*mA + kSA*mS - kAD*mA + kDA*mD
     dmSdt = -kSA*mS + kAS*mA
+    
     return [dmDdt, dmAdt, dmSdt]
 
 def irreversible(t,c):
     kDA = k[0]
-    kAD = k[1]
     kAS = k[2]
     kSA = k[3]
     # part a
@@ -88,11 +89,53 @@ plt.grid()
 CaCd = Ar[-1]/Dr[-1] # stabilizes at 1.999 (2.00)
 CsCa = Sr[-1]/Ar[-1] # stabilizes at 6.32
 
-# exercise 2
+# %% part 2
 
+def mmmonod(t,c):
+    kDA = k[0]
+    kAD = k[1]
+    kAS = k[2]
+    kSA = k[3]
+    
+    mD = c[0]
+    mA = c[1]
+    mS = c[2]
+    X  = c[3]
+    
+    # table 3 input data
+    vmax = 4 # g C substrate
+    Km = 0.715 # g C m^-3
+    Y = 0.31 # g C biomass
+    b = 0.05 # d^-1
+    
+    # for exercise 3
+    dmMdt = vmax*X*(mD/(Km+mD))
+    mumax = Y*vmax
+    dXdt = ((mumax*mD)/(Km+mD))*X-b*X
+    
+    # part a
+    dmAdt = -kAS*mA + kSA*mS - kAD*mA + kDA*mD
+    dmSdt = -kSA*mS + kAS*mA
+    dmDdt = -kDA*mD + kAD*mA - (dmMdt + dXdt)
+    
+    return [dmDdt, dmAdt, dmSdt, dXdt]
 
+x0 = [1,0,0,0.01] # mD, mA, mS, and X
+tstart = 0
+tend = 60
+k = (1.00, 0.50, 0.063201, 0.01) # defining k values
+t_eval = np.linspace(tstart, tend, num=10000)
+xr = solve_ivp(mmmonod,[tstart,tend],x0, method ='RK45', t_eval = t_eval) # calling function
 
+# assigning values from functions
+Dr = xr.y[0]
+Xr = xr.y[3]
 
-
-
-
+plt.figure(1)
+plt.plot(xr.t,Dr,label ='D')
+plt.plot(xr.t,Xr,label ='Growth')
+plt.legend(loc='best')
+plt.xlabel('t [days]')
+plt.ylabel('Concentration')
+plt.title('Mass vs. time for reversible exchange')
+plt.grid()
