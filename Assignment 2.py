@@ -98,44 +98,48 @@ def reversible(t,c):
     mD = c[0]
     mA = c[1]
     mS = c[2]
-    
     X  = c[3]
-    cD = c[4]
+    cD = c[0]
     
     vMax = 4
     kM = 0.715
     Y = 0.31
     b = 0.05
     
-    # part a
-    dmDdt = -kDA*mD + kAD*mA
-    dmAdt = -kAS*mA + kSA*mS - kAD*mA + kDA*mD
-    dmSdt = -kSA*mS + kAS*mA
-    
     # Exercise 3
     muMax = Y * vMax   
     dmMdt = vMax*X*(cD/(kM+cD))
-    dXdt  = ((muMax*cD)/(kM+cD))-b*X
-    return [dmDdt, dmAdt, dmSdt, dmMdt, dXdt]
+    dXdt  = ((muMax*cD)/(kM+cD))*X-b*X
+    
+    dmAdt = -kAS*mA + kSA*mS - kAD*mA + kDA*mD
+    dmSdt = -kSA*mS + kAS*mA
+    dmDdt = -kDA*mD + kAD*mA - (dmMdt + dXdt)
+    return [dmDdt, dmAdt, dmSdt, dXdt]
 
-x0 = [1,0,0,0.01,1] # initial conditions
+x0 = [1,0,0,0.01] # initial conditions
 tstart = 0
-tend= 60
+tend= 120
 k = (1.00, 0.50, 0.063201, 0.01) # defining k values
 t_eval = np.linspace(tstart, tend, num=10000)
-xr = solve_ivp(reversible,[tstart,tend],x0, method ='RK45', t_eval=t_eval) # calling function
+xr = solve_ivp(reversible,[tstart,tend],x0, method ='RK45',t_eval=t_eval) # calling function
 
-gr = xr.y[4]
+gr = xr.y[3]
 t = xr.t
 
 # Find the index where growth rate is closest to zero
-zero_growth_index = np.argmin(np.abs(gr))
+zero_growth_index = np.argmax(np.abs(gr))
 print(zero_growth_index)
-
 # Get the time and concentration of cD at that index
 time_at_zero_growth = t[zero_growth_index]
+print(time_at_zero_growth)
 cD_at_zero_growth = xr.y[3, zero_growth_index]  # cD is the fourth component
 
-
+plt.figure(3)
+plt.plot(t,gr,label ='gr')
+plt.legend(loc='best')
+plt.xlabel('t [days]')
+plt.ylabel('Concentration')
+plt.title('Mass vs. time for reversible exchange')
+plt.grid()
 
 
