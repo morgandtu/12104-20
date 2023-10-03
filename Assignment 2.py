@@ -116,15 +116,25 @@ def reversible(t,c):
     muMax = Y * vMax   
     dmMdt = vMax*X*(cD/(kM+cD))
     dXdt  = ((muMax*cD)/(kM+cD))-b*X
-    
     return [dmDdt, dmAdt, dmSdt, dmMdt, dXdt]
 
 x0 = [1,0,0,0.01,1] # initial conditions
 tstart = 0
 tend= 60
 k = (1.00, 0.50, 0.063201, 0.01) # defining k values
-xr = solve_ivp(reversible,[tstart,tend],x0, method ='RK45') # calling function
+t_eval = np.linspace(tstart, tend, num=10000)
+xr = solve_ivp(reversible,[tstart,tend],x0, method ='RK45', t_eval=t_eval) # calling function
 
+gr = xr.y[4]
+t = xr.t
+
+# Find the index where growth rate is closest to zero
+zero_growth_index = np.argmin(np.abs(gr))
+print(zero_growth_index)
+
+# Get the time and concentration of cD at that index
+time_at_zero_growth = t[zero_growth_index]
+cD_at_zero_growth = xr.y[3, zero_growth_index]  # cD is the fourth component
 
 
 
