@@ -114,7 +114,7 @@ def reversible(t,c):
     dmSdt = -kSA*mS + kAS*mA
     dmDdt = -kDA*mD + kAD*mA - (dmMdt + dXdt)
     CO2 = (1-Y)*dmSdt # from pg 39
-    dXXdt = ((muMax*cD)/(kM + cD)) - b
+    dXXdt = ((muMax*cD)/(kM+cD)) - b
     return [dmDdt, dmAdt, dmSdt, dXdt, CO2, dXXdt]
 
 x0 = [1,0,0,0.01,0,0] # initial conditions
@@ -134,36 +134,50 @@ t = output.t
 
 # Find the index where growth rate is closest to zero (aka where the growth reaches a maximum)
 zero_growth_index = np.argmax(np.abs(X))
-print(zero_growth_index)
 # Get the time and concentration of cD at that index
 time_at_zero_growth = t[zero_growth_index]
 print(time_at_zero_growth)
 cD_at_zero_growth = output.y[3, zero_growth_index]  # cD is the fourth component
 print(cD_at_zero_growth)
 
+
+# %% Exercise 4
+
 plt.figure(3)
 plt.plot(t,mD,label ='D')
 plt.plot(t,mA,label ='A')
 plt.plot(t,mS,label ='S')
-plt.plot(t,X,label ='Growth')
+plt.plot(t,X,label ='Biomass')
 plt.plot(t,CO2,label ='CO2')
+plt.plot(t,dXXdt,label ='Growth rate')
 plt.legend(loc='best')
 plt.xlabel('t [days]')
-plt.ylabel('Concentration')
-plt.title('Mass vs. time for reversible exchange')
+plt.ylabel('Mass (g)')
+plt.title('Mass vs. time for reversible exchange simulation')
 plt.grid()
 
+# b
 ianswer = ((mD[-1] + mA[-1] + mS[-1])/1)*100 # g (g/m^-3)
 iianswer = ((mA[-1] + mS[-1])/1)*100
 iiianswer = ((X[-1] + CO2[-1])/1.01)*100
 
-allC = mD[-1] + mA[-1] + mS[-1] + X[-1] + CO2[-1]
-
+# c, finding the max biomass and time
 highestX = np.max(X)
+print(highestX)
 idxhighestX = np.where(X == highestX)
 timeathighestX = t[idxhighestX]
+print(timeathighestX)
 
+# finding the max dX/(Xdt) and time
 highestdXXdt = np.max(dXXdt)
+print(highestdXXdt)
 idxhighestdXXdt = np.where(dXXdt == highestdXXdt)
 timeathighestdXXdt = t[idxhighestdXXdt]
+print(timeathighestdXXdt)
+meanDXXdt = np.mean(dXXdt)
+
+# %% Exercise 5
+
+# finding how much carbon there is total
+allC = mD[-1] + mA[-1] + mS[-1] + X[-1] + CO2[-1]
 
