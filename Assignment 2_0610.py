@@ -116,7 +116,7 @@ def bacgro(t,c):
     dmAdt = -kAS*cA + kSA*cS - kAD*cA + kDA*cD
     dmSdt = -kSA*cS + kAS*cA
 
-    return [dmDdt, dmAdt, dmSdt, dXdt]
+    return [dmDdt, dmAdt, dmSdt, dXdt, dmMdt]
 
 # givens again
 vmax = 4
@@ -125,7 +125,7 @@ Y = 0.31
 b = 0.05
 mumax = Y*vmax
 
-inputs = [1, 0, 0, 0.01]
+inputs = [1, 0, 0, 0.01, 0]
 tstart = 0
 tend = 60
 k = (1.00, 0.50, 0.063201, 0.01)
@@ -134,8 +134,9 @@ cD = output.y[0]
 cA = output.y[1]
 cS = output.y[2]
 X = output.y[3] # biomass
+mM = output.y[4]
 t = output.t
-CO2 = (1-Y)*((cA + cS))
+CO2 = (1-Y)*mM
 
 # when growth dX/dt = 0
 
@@ -172,7 +173,7 @@ plt.grid()
 # part B -- calculations
 remaining = ((cD[-1] + cA[-1] + cS[-1])/1)*100
 degraded = ((cA[-1] + cS[-1])/1)*100
-Cinbiomass = (1-Y)*(cA[-1] + cS[-1])
+Cinbiomass = ((1-Y)*(cA[-1] + cS[-1]))*100
 
 # part C -- when the maximum X occurs
 # growth dX/dt is the derivative of the amount of biomass X
@@ -194,6 +195,8 @@ idxmaxcD = np.where(cD == maxcD)
 timeatmaxcD = t[idxmaxcD]
 print(timeatmaxcD) # this makes sense logically
 
+
 # %% Exercise 5
 
-finalC = CO2[-1]
+finalC = cD[-1] + cA[-1] + cS[-1] + X[-1] + CO2[-1]
+
