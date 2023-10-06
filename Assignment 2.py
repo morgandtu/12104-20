@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
 import os
-os.chdir('C:/Users/mariu/Documents/Python Scripts/Environmental modelling/Assignment 2')
 
 # %% part 1
 
@@ -88,58 +87,161 @@ plt.grid()
 CaCd = Ar[-1]/Dr[-1] # stabilizes at 1.999 (2.00)
 CsCa = Sr[-1]/Ar[-1] # stabilizes at 6.32
 
-# %% Exercise 3
-def reversible(t,c):
+# %% Exercise 3, redone
+
+def bacgro(t,c):
+    
     kDA = k[0]
     kAD = k[1]
     kAS = k[2]
     kSA = k[3]
     
-    mD = c[0]
-    mA = c[1]
-    mS = c[2]
-    X  = c[3]
     cD = c[0]
+    cA = c[1]
+    cS = c[2]
+    X = c[3]
     
-    vMax = 4
+    # adding given values
+    vmax = 4
     kM = 0.715
     Y = 0.31
     b = 0.05
     
-    # Exercise 3
-    muMax = Y * vMax   
-    dmMdt = vMax*X*(cD/(kM+cD))
-    dXdt  = ((muMax*cD)/(kM+cD))*X-b*X
+    # calculations
+    mumax = Y*vmax
+    dmMdt = vmax*X*(cD/(kM + cD))
+    dXdt = ((mumax*cD)/(kM + cD))*X - b*X
     
-    dmAdt = -kAS*mA + kSA*mS - kAD*mA + kDA*mD
-    dmSdt = -kSA*mS + kAS*mA
-    dmDdt = -kDA*mD + kAD*mA - (dmMdt + dXdt)
-    return [dmDdt, dmAdt, dmSdt, dXdt]
+    dmDdt = -kDA*cD + kAD*cA - (dmMdt)
+    dmAdt = -kAS*cA + kSA*cS - kAD*cA + kDA*cD
+    dmSdt = -kSA*cS + kAS*cA
+    
+    dbdt = X*b
+    
+    return [dmDdt, dmAdt, dmSdt, dXdt, dmMdt, dbdt]
 
-x0 = [1,0,0,0.01] # initial conditions
+# givens again
+vmax = 4
+kM = 0.715
+Y = 0.31
+b = 0.05
+mumax = Y*vmax
+
+inputs = [1, 0, 0, 0.01, 0, 0]
 tstart = 0
-tend= 120
-k = (1.00, 0.50, 0.063201, 0.01) # defining k values
-t_eval = np.linspace(tstart, tend, num=10000)
-xr = solve_ivp(reversible,[tstart,tend],x0, method ='RK45',t_eval=t_eval) # calling function
+tend = 60
+k = (1.00, 0.50, 0.063201, 0.01)
+output = solve_ivp(bacgro, [tstart,tend], inputs, method = 'RK45')
+cD = output.y[0]
+cA = output.y[1]
+cS = output.y[2]
+X = output.y[3] # biomass
+mM = output.y[4]
+db = output.y[5]
+t = output.t
+CO2 = (1-Y)*mM
+#CO2 = (1-Y)*((cA + cS))
 
-gr = xr.y[3]
-t = xr.t
+# when growth dX/dt = 0
 
-# Find the index where growth rate is closest to zero
-zero_growth_index = np.argmax(np.abs(gr))
-print(zero_growth_index)
-# Get the time and concentration of cD at that index
-time_at_zero_growth = t[zero_growth_index]
-print(time_at_zero_growth)
-cD_at_zero_growth = xr.y[3, zero_growth_index]  # cD is the fourth component
+# Mathematically, growth would be 0 when (mumaxcD/kM+cD) = b, or when the growth rate is equal to the death rate.
+# solve (mumax * cD)/(kM + cD) - 0.05 = 0
+# result (from calculator): cD = 0.030042 g
 
+zerogrowthidx = np.argmax(np.abs(X))
+zerogrowthtime = t[zerogrowthidx]
+print(zerogrowthtime)
+zerogrowthcD = cD[zerogrowthidx]
+print(zerogrowthcD) # checks out
+
+# how you can check if your code makes sense
+# 1) numerical model in excel
+# 2) calculate by hand if the value above makes sense--it does
+# 3) ???
+
+# %% Exercise 4
+
+# part A -- plotting
 plt.figure(3)
-plt.plot(t,gr,label ='gr')
+plt.plot(t,cD,label ='D')
+plt.plot(t,cA,label ='A')
+plt.plot(t,cS,label ='S')
+plt.plot(t,X,label ='Biomass (X)')
+plt.plot(t,CO2,label = 'CO2')
 plt.legend(loc='best')
 plt.xlabel('t [days]')
-plt.ylabel('Concentration')
-plt.title('Mass vs. time for reversible exchange')
+plt.ylabel('Mass (g)')
+plt.title('Mass vs. time for reversible exchange simulation')
 plt.grid()
+
+# part B -- calculations
+remaining = ((cD[-1] + cA[-1] + cS[-1])/1)*100
+degraded = ((cA[-1] + cS[-1])/1)*100
+Cinbiomass = (1-Y)*(cA[-1] + cS[-1])
+
+# part C -- when the maximum X occurs
+# growth dX/dt is the derivative of the amount of biomass X
+# maximum X would occur where dX/dt = 0, which we just determined above
+highestX = np.max(X)
+print(highestX)
+idxhighestX = np.where(X == highestX)
+timeathighestX = t[idxhighestX]
+print(timeathighestX) # time is the same, which checks out!
+
+# part D -- when the maximum dX/Xdt occurs (growth rate)
+# calculate algebraically: dX/Xdt = (mumax*cD)/(kM+cD) - b
+# only variable in this is cD, and higher cD = higher dX/Xdt
+# max dX/Xdt thus occurs at max cD
+
+maxcD = np.max(cD)
+print(maxcD)
+idxmaxcD = np.where(cD == maxcD)
+timeatmaxcD = t[idxmaxcD]
+print(timeatmaxcD) # this makes sense logically
+
+# %% Exercise 5
+totalCend=cD[-1] + cA[-1] + cS[-1] + CO2[-1] + X[-1]
+totalCstart=cD[0] + cA[0] + cS[0] + CO2[0] + X[0]
+print(totalCstart - totalCend)
+# The missing carbon is found in the dead material.
+print(db[-1]) 
+
+totalCend=cD[-1] + cA[-1] + cS[-1] + CO2[-1] + X[-1] + db[-1]
+totalCstart=cD[0] + cA[0] + cS[0] + CO2[0] + X[0] + db[0]
+print(totalCstart - totalCend)
+
+# The reason that we have a difference of 0.01 (1.01 - 0.01) is because of the 
+# initioal microbial degrader biomass X(0) (0.01) that is added to the 
+# startconcencentration (1.00)
+
+# %% Exercise 6
+
+#a
+#plotssss
+
+#b
+#When X(0)=0, biomass doesnt exist and the other parameters have to make up for it
+#D and A does not decline as much and ends up being of a higher value than before
+#but CO2 and S rises remarkably more than if X(0)=0.01
+
+#c
+#Of course, if Y and/or vmax equals 0, the growth rate is 0 and no new microbes will grow
+#Which will result in death of all microbes almost instantly
+
+#d
+ratAD = cA[-1]/cD[-1]
+ratSA = cS[-1]/cA[-1]
+#they are not the same *values* are significantly higher,
+
+# %% Exercise 7
+
+cDcA = [0] * 5
+allfit = [0] * 5
+times = [2, 10, 18, 29, 40]
+for i in range(len(times)):
+    cDcA[i] = cD[times[i]] + cA[times[i]]
+    allfit[i] = cD[times[i]] + cA[times[i]] + cA[times[i]] + X[times[i]] + db[times[i]]
+
+
 
 
