@@ -114,6 +114,7 @@ def reversible(t,c):
     dmSdt = -kSA*mS + kAS*mA
     dmDdt = -kDA*mD + kAD*mA - (dmMdt + dXdt)
     CO2 = (1-Y)*dmSdt # from pg 39
+    
     dXXdt = ((muMax*cD)/(kM+cD)) - b
     return [dmDdt, dmAdt, dmSdt, dXdt, CO2, dXXdt]
 
@@ -149,7 +150,6 @@ plt.plot(t,mA,label ='A')
 plt.plot(t,mS,label ='S')
 plt.plot(t,X,label ='Biomass')
 plt.plot(t,CO2,label ='CO2')
-plt.plot(t,dXXdt,label ='Growth rate')
 plt.legend(loc='best')
 plt.xlabel('t [days]')
 plt.ylabel('Mass (g)')
