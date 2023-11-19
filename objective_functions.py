@@ -19,3 +19,9 @@ def invMSE(obs_data,sim_data):
     objFun=np.mean(err) # calculate MSE
     objFun=1/objFun # calculate inverse of MSE
     return objFun
+
+# new objective function
+def MSE(obs_data,sim_data):
+    err=(sim_data-obs_data)**2 # error vector
+    objFun=np.mean(err) # calculate MSE
+    return objFun
