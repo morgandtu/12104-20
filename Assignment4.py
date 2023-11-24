@@ -159,9 +159,9 @@ out3 = NH4.NH4inletModel3(par3,flowdata,flowThr)
 plt.figure()
 ax1=plt.subplot(2,1,1)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax1.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
 ax1.grid(True)
 plt.title('Smoothed Flux: Measured vs. Modeled')
@@ -169,9 +169,9 @@ plt.legend()
 
 ax2=plt.subplot(2,1,2)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax2.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
 plt.xlim([datetime.date(2018, 6, 16), datetime.date(2018, 6, 20)])
 plt.ylim([3000, 20000])
@@ -312,7 +312,7 @@ Si_MARE[7]=((outB8-out01)/out01)/dPar
 
 # %% Global sensitivity analysis
 
-param = np.array([('a0', 1000, 7000), ('a1', -2000, 2000), ('a2', -2000, 2000), ('b1', -2000, 2000), ('b2', -2000, 2000), ('c1', 400, 800), ('c2', 1*60, 12*60), ('c3', 0/24, 24/24)], dtype=[('name', 'U10'), ('min', 'f4'), ('max', 'f4')])
+param = np.array([('a0', 5000, 7000), ('a1', -2000, 2000), ('a2', -2000, 2000), ('b1', -2000, 2000), ('b2', -2000, 2000), ('c1', 400, 800), ('c2', 1*60, 12*60), ('c3', 0/24, 24/24)], dtype=[('name', 'U10'), ('min', 'f4'), ('max', 'f4')])
 
 # regression GSA
 # import GSAregression_asst4 as GSA_regression_fun
