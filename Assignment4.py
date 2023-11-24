@@ -106,17 +106,17 @@ ax4.grid(True)
 
 import NH4models as NH4
 # parameters--medians from Pedersen
-# best guess 19/11: 6100, -1500, 200, -800, 50
-a0 = 6000
-a1 = -1500
+# best guess 19/11: 6100, -1000, 200, -800, 5000
+a0 = 6100
+a1 = -1000
 a2 = 200
 b1 = -800
-b2 = 50
+b2 = 500
 
-# best guess 19/11: 600, 4*60, 11/24
-c12 = 600
-c22 = 4*60
-c32 = 11/24
+# best guess 19/11: 1000, 8*60, 8/24
+c12 = 1000
+c22 = 8*60
+c32 = 8/24
 
 # best guess 0.2, 3, 4, 250
 c13 = 0.2
@@ -159,9 +159,9 @@ out3 = NH4.NH4inletModel3(par3,flowdata,flowThr)
 plt.figure()
 ax1=plt.subplot(2,1,1)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax1.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
 ax1.grid(True)
 plt.title('Smoothed Flux: Measured vs. Modeled')
@@ -169,12 +169,12 @@ plt.legend()
 
 ax2=plt.subplot(2,1,2)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax2.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
 plt.xlim([datetime.date(2018, 6, 16), datetime.date(2018, 6, 20)])
-plt.ylim([3000, 20000])
+plt.ylim([3000, 17500])
 ax2.grid(True)
 plt.legend()
 
