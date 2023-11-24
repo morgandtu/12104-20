@@ -14,7 +14,7 @@ OUTPUT - mu_star= mean of the absolute values for sensitivity indices
         for each trajectory
 
 """
-def morrisGSA( n_trj, par_info, meas_data,sim_time_step ):
+def morrisGSA(n_trj, par_info, meas_data):
     
     
     ## generate trajectories across the parameter space
@@ -45,7 +45,7 @@ def morrisGSA( n_trj, par_info, meas_data,sim_time_step ):
     
     obj_fun=np.zeros(n_sim) #vector to store the objective function
     
-    import degradation_function as fun   # import the model to be run
+    import NH4models as fun # import the model to be run
     import objective_functions as objFun # import the objective function to be used
 
     # run the model for the generated samples
@@ -54,9 +54,9 @@ def morrisGSA( n_trj, par_info, meas_data,sim_time_step ):
     for i in range(n_sim):
         print(['analyzing parameter set ' + str(i) + 'out of ' + str(n_sim)] )
         # run the model
-        out = fun.degradation_rate(sim_time_step,par_sample[i,])
+        out = fun.NH4inletModel2(par_sample[i,],meas_data)
         # calculate the objective function
-        obj_fun[i] = objFun.invMSE(meas_data,out)
+        obj_fun[i]=objFun.MARE(meas_data['smoothed'],out['simNH4load'])
         
     
     ## calculate indices
@@ -82,42 +82,46 @@ def morrisGSA( n_trj, par_info, meas_data,sim_time_step ):
     plt.figure()
        
     # bars of mu
-    plt.subplot(2,2,1)
-    x_par = range(n_par)
-    plt.bar(x_par, mu)
-    plt.ylabel(r'$\mu$')
-    plt.xticks(x_par, par_info['name'])
+    # plt.subplot(2,2,1)
+    # x_par = range(n_par)
+    # plt.bar(x_par, mu)
+    # plt.ylabel(r'$\mu$')
+    # plt.xticks(x_par, par_info['name'])
 
     # bars of mu star
-    plt.subplot(2,2,2)
+    plt.subplot(2,1,1)
     x_par = range(n_par)
     plt.bar(x_par, mu_star)
     plt.ylabel(r'$\mu^*$')
     plt.xticks(x_par, par_info['name'])        
         
     #  mu vs standard deviation
-    plt.subplot(2,2,3)
-    x_par = range(n_par)
-    plt.plot(mu,sigma,'.')
-    plt.xlabel(r'$\mu$')
-    plt.ylabel(r'$\sigma$')
-    plt.grid(True)
-    xlim=[np.min([1.05*np.floor(np.min(mu)),0]),np.max([0,1.05*np.ceil(np.max(mu))])]
-    ylim=[0,np.ceil(np.max(sigma)*1.05)]
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    for i in range(n_par):
-        plt.annotate(par_info['name'][i],(mu[i],sigma[i]))    
+    # plt.subplot(2,2,3)
+    # x_par = range(n_par)
+    # plt.plot(mu,sigma,'.')
+    # plt.xlabel(r'$\mu$')
+    # plt.ylabel(r'$\sigma$')
+    # plt.grid(True)
+    # #xlim=[np.min([1.05*np.floor(np.min(mu)),0]),np.max([0,1.05*np.ceil(np.max(mu))])]
+    # xlim = [-0.25, 1.25]
+    # #ylim=[0,np.ceil(np.max(sigma)*1.05)]
+    # ylim = [0, 0.1]
+    # plt.xlim(xlim)
+    # plt.ylim(ylim)
+    # for i in range(n_par):
+    #     plt.annotate(par_info['name'][i],(mu[i],sigma[i]))    
 
     #  mu start vs standard deviation
-    plt.subplot(2,2,4)
+    plt.subplot(2,1,2)
     x_par = range(n_par)
     plt.plot(mu_star,sigma,'.')
     plt.xlabel(r'$\mu^*$')
     plt.ylabel(r'$\sigma$')
     plt.grid(True)
-    xlim=[np.min([1.05*np.floor(np.min(mu_star)),0]),np.max([0,1.05*np.ceil(np.max(mu_star))])]
-    ylim=[0,np.ceil(np.max(sigma)*1.05)]
+    # xlim=[np.min([1.05*np.floor(np.min(mu_star)),0]),np.max([0,1.05*np.ceil(np.max(mu_star))])]
+    xlim = [0, 1.1]
+    # ylim=[0,np.ceil(np.max(sigma)*1.05)]
+    ylim = [0, 0.1]
     plt.plot([0,np.max([xlim[1],ylim[1]])],[0,np.max([xlim[1],ylim[1]])],color='red' )    
     plt.xlim(xlim)
     plt.ylim(ylim)
