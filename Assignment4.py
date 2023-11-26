@@ -326,3 +326,94 @@ import morrisGSA as morrisGSA_fun
 print(abs(sMorris))
 
 
+# %% Calibration
+
+
+# best fit values
+a0 = 6100
+a1 = -1000
+a2 = 200
+b1 = -800
+b2 = 500
+c1 = 1000
+c2 = 8*60
+c3 = 8/24
+
+# %% Functions and all that etc--COLLAPSE THIS
+# making param arrays
+params = np.zeros(6)
+extra_params = np.zeros(2)
+params[0] = a0
+params[1] = a1
+params[2] = a2
+params[3] = b1
+params[4] = b2
+extra_params[0] = c1
+extra_params[1] = c2
+params[5] = c3
+
+out2 = NH4.NH4inletModel2([a0, a1, a2, b1, b2, c1, c2, c3],flowdata)
+NH4flux['model 2'] = out2['simNH4load']
+
+def NH4inletModel2_fit(param, extra_param, flowdata):
+    import numpy as np
+    import NH4models as NH4
+    
+    params = np.zeros(8)
+    params[0] = param[0] # a0
+    params[1] = param[1] # a1
+    params[2] = param[2] # a2
+    params[3] = param[3] # b1
+    params[4] = param[4] # b2
+    params[5] = param[5] # c3
+    params[6] = extra_param[0] # c1
+    params[7] = extra_param[1] # c2
+    
+    sim_out = NH4.NH4inletModel2(params, flowdata)
+    
+    return sim_out
+
+fluxWrap = NH4inletModel2_fit(params, extra_params, flowdata)
+
+def run_NH4inletModel2_fit(param, extra_param, flowdata, NH4flux):
+    import objective_functions as objFun
+    
+    sim_out = NH4inletModel2_fit(param, extra_param, flowdata)
+    MARE = objFun.MARE(NH4flux['measured'],sim_out['simNH4load'])
+
+    return MARE
+
+goodnessoffit = run_NH4inletModel2_fit(params, extra_params, flowdata, NH4flux)
+
+def run_NH4inletModel2_fit_bnd(param, extra_param, flowdata, NH4flux, lb, ub):
+    import objective_functions as objFun
+    if all(lb < param) & all(param < ub):
+        sim_out =  NH4inletModel2_fit(param, extra_param, flowdata)
+        MARE = objFun.MARE(NH4flux['measured'],sim_out['simNH4load'])
+    else:
+        MARE = 1e300
+    return MARE
+
+param = np.array([('a0', 5500, 6500), 
+                 ('a1', -2000, 2000), 
+                 ('a2', -2000, 2000), 
+                 ('b1', -2000, 2000),
+                 ('b2', -2000, 2000),
+                 ('c3', 0, 1)],
+                 dtype=[('name', 'U10'), ('min', 'f4'), ('max', 'f4')])
+
+goodnessOfFit = run_NH4inletModel2_fit_bnd(params, extra_params, flowdata, NH4flux, param['min'], param['max'])
+
+# %% optimization
+
+# assign starting values
+x0 = [a0,a1,a2,b1,b2,c3]
+from scipy.optimize import minimize
+
+# run optimizer
+resOptimizer = minimize(run_NH4inletModel2_fit_bnd, x0, args=(extra_params, flowdata, NH4flux, param['min'], param['max']), method='nelder-mead',options={'disp': True})
+bestParSet= resOptimizer ['x']
+
+# rerunning with 
+
+
