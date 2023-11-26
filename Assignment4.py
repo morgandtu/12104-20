@@ -46,7 +46,7 @@ flowdata['smoothed'] = flowdata.iloc[:,1].rolling(window=720).mean()
 flowdata = flowdata.iloc[719:,:]
 NH4data = NH4data.iloc[719:,:]
 
-NH4flux = pd.DataFrame(columns=['time','measured','model 0','model 2','model 3'])
+NH4flux = pd.DataFrame(columns=['time','measured','model 0','model 2','model 3','model best'])
 # concentration = flux/flow so flux = concentration*flow
 NH4flux['measured'] = (NH4data['nh4'])*flowdata['smoothed'] # m^3/hr * g/m^3 = g/hr
 NH4flux['time'] = flowdata['time']
@@ -106,15 +106,15 @@ ax4.grid(True)
 
 import NH4models as NH4
 # parameters--medians from Pedersen
-# best guess 19/11: 6100, -1000, 200, -800, 5000
-a0 = 6100
-a1 = -1000
-a2 = 200
-b1 = -800
-b2 = 500
+# best guess 19/11: 6100, -1000, 200, -800, 500
+a0 = 6000
+a1 = -1500
+a2 = 1000
+b1 = 700
+b2 = -200
 
 # best guess 19/11: 1000, 8*60, 8/24
-c12 = 1000
+c12 = 1300
 c22 = 8*60
 c32 = 8/24
 
@@ -159,9 +159,9 @@ out3 = NH4.NH4inletModel3(par3,flowdata,flowThr)
 plt.figure()
 ax1=plt.subplot(2,1,1)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax1.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
 ax1.grid(True)
 plt.title('Smoothed Flux: Measured vs. Modeled')
@@ -169,91 +169,14 @@ plt.legend()
 
 ax2=plt.subplot(2,1,2)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
-plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
 plt.plot_date(out2['time'], out2['simNH4load'], color = 'green', linestyle = '-', marker = "", label = 'model 2',linewidth=1)
-plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
 ax2.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
-plt.xlim([datetime.date(2018, 6, 16), datetime.date(2018, 6, 20)])
-plt.ylim([3000, 17500])
+plt.xlim([datetime.date(2018, 7, 3), datetime.date(2018, 7, 8)])
+plt.ylim([3000, 10000])
 ax2.grid(True)
 plt.legend()
-
-
-# concentration plot
-# plt.figure()
-# ax1=plt.subplot(2,1,1)
-# plt.plot_date(flowdata['time'], NH4data['nh4'], color = 'black', linestyle = '-', marker = "", label = 'measured')
-# plt.plot_date(out0['time'], out0['simNH4conc'], color = 'red', linestyle = '-', marker = "", label = 'model 0')
-# plt.plot_date(out2['time'], out2['simNH4conc'], color = 'green', linestyle = '-', marker = "", label = 'model 2')
-# plt.plot_date(out3['time'], out3['simNH4conc'], color = 'blue', linestyle = '-', marker = "", label = 'model 3')
-# ax1.set_ylabel('NH$4^+$ concentration $(g/m^3)$') #add y-label
-# ax1.grid(True)
-# plt.title('Concentrations: Measured vs. Modeled')
-# plt.legend()
-
-# ax2=plt.subplot(2,1,2)
-# plt.plot_date(flowdata['time'], NH4data['nh4'], color = 'black', linestyle = '-', marker = "", label = 'measured')
-# plt.plot_date(out0['time'], out0['simNH4conc'], color = 'red', linestyle = '-', marker = "", label = 'model 0')
-# plt.plot_date(out2['time'], out2['simNH4conc'], color = 'green', linestyle = '-', marker = "", label = 'model 2')
-# plt.plot_date(out3['time'], out3['simNH4conc'], color = 'blue', linestyle = '-', marker = "", label = 'model 3')
-# ax2.set_ylabel('NH$4^+$ concentration $(g/m^3)$') #add y-label
-# plt.xlim([datetime.date(2018, 6, 16), datetime.date(2018, 6, 22)])
-# plt.ylim([0, 250])
-# ax2.grid(True)
-# plt.legend()
-
-
-# %% objective function analysis
-
-# wet weather event threshold (m^3/hour)
-flowThr = 250
-
-# define events
-# you find the values of your data above the threshold
-idxFlowAboveThr = flowdata['flow']>flowThr # this gives you a Boolean vector
-# you need to covert the Boolean (true/false) into an integer (1/0)
-idxFlowAboveThr = idxFlowAboveThr.astype(int)
-# now calculate where there is a change in the status (from below to above the threshold or viceversa by calculating the difference between each step
-idxFlowAboveThr = idxFlowAboveThr.diff()
-# find when the flow went above the threshold (from 0 to 1)
-evStart = idxFlowAboveThr[idxFlowAboveThr>0]
-# find when the flow went below the threshold (from 1 to 0)
-evEnd = idxFlowAboveThr[idxFlowAboveThr<0]-1
-# find the indices of the event start and end
-idxEvStart = evStart.index
-idxEvEnd = evEnd.index-1 # the step before was the last one with flow above thresh
-
-# declare vectors for both simulations
-dummySimulation0 = np.array([]) #the array to save the aggregate results
-dummyObservation0 = np.array([]) #the array to save the aggregate measurements
-dummySimulation2 = np.array([]) #the array to save the aggregate results
-dummyObservation2 = np.array([]) #the array to save the aggregate measurements
-dummySimulation3 = np.array([]) #the array to save the aggregate results
-dummyObservation3 = np.array([]) #the array to save the aggregate measurements
-
-NH4flux['model 0'] = out0['simNH4load']
-NH4flux['model 2'] = out2['simNH4load']
-NH4flux['model 3'] = out3['simNH4load']
-
-import objective_functions as objFun
-# loop over events
-for ev in range (len(idxEvStart)):
-    startDate = flowdata['time'][idxEvStart[ev]]
-    stopDate = flowdata['time'][idxEvEnd[ev]]
-    stopDate=pd.to_datetime(stopDate) + pd.DateOffset(2) # lag time
-    # find indices of the event
-    idxEv=(flowdata['time']>startDate) & (flowdata['time']<=stopDate)
-    # running a dummy simulation
-    dummySimulation0 = np.concatenate((dummySimulation0, NH4flux['model 0'][idxEv]))
-    dummyObservation0 = np.concatenate((dummyObservation0, NH4flux['measured'][idxEv]))
-    dummySimulation2 = np.concatenate((dummySimulation2, NH4flux['model 2'][idxEv]))
-    dummyObservation2 = np.concatenate((dummyObservation2, NH4flux['measured'][idxEv]))
-    dummySimulation3 = np.concatenate((dummySimulation3, NH4flux['model 3'][idxEv]))
-    dummyObservation3 = np.concatenate((dummyObservation3, NH4flux['measured'][idxEv]))
-
-MARE0 = objFun.MARE(dummyObservation0, dummySimulation0)*100
-MARE2 = objFun.MARE(dummyObservation2, dummySimulation2)*100
-MARE3 = objFun.MARE(dummyObservation3, dummySimulation3)*100
 
 # %% 
 # =============================================================================
@@ -328,92 +251,158 @@ print(abs(sMorris))
 
 # %% Calibration
 
+# split dataset
+flowdatacal = flowdata.iloc[719:39881]
+flowdataval = flowdata.iloc[39882:65990]
+NH4fluxcal = NH4flux.iloc[719:39881]
+NH4fluxval = NH4flux.iloc[39882:65990]
 
 # best fit values
-a0 = 6100
-a1 = -1000
-a2 = 200
-b1 = -800
-b2 = 500
-c1 = 1000
+a0 = 6000
+a1 = -1500
+a2 = 1000
+b1 = 700
+b2 = -200
+c1 = 1300
 c2 = 8*60
 c3 = 8/24
 
 # %% Functions and all that etc--COLLAPSE THIS
 # making param arrays
-params = np.zeros(6)
+params = np.zeros(8)
 extra_params = np.zeros(2)
 params[0] = a0
 params[1] = a1
 params[2] = a2
 params[3] = b1
 params[4] = b2
-extra_params[0] = c1
-extra_params[1] = c2
-params[5] = c3
+params[5] = c1
+params[6] = c2
+params[7] = c3
 
-out2 = NH4.NH4inletModel2([a0, a1, a2, b1, b2, c1, c2, c3],flowdata)
-NH4flux['model 2'] = out2['simNH4load']
+out2 = NH4.NH4inletModel2([a0, a1, a2, b1, b2, c1, c2, c3],flowdatacal)
+NH4fluxcal['model 2'] = out2['simNH4load']
 
-def NH4inletModel2_fit(param, extra_param, flowdata):
+def NH4inletModel2_fit(param, flowdata):
     import numpy as np
     import NH4models as NH4
     
-    params = np.zeros(8)
-    params[0] = param[0] # a0
-    params[1] = param[1] # a1
-    params[2] = param[2] # a2
-    params[3] = param[3] # b1
-    params[4] = param[4] # b2
-    params[5] = param[5] # c3
-    params[6] = extra_param[0] # c1
-    params[7] = extra_param[1] # c2
-    
-    sim_out = NH4.NH4inletModel2(params, flowdata)
+    sim_out = NH4.NH4inletModel2(param, flowdata)
     
     return sim_out
 
-fluxWrap = NH4inletModel2_fit(params, extra_params, flowdata)
+fluxWrap = NH4inletModel2_fit(params, flowdatacal)
 
-def run_NH4inletModel2_fit(param, extra_param, flowdata, NH4flux):
+def run_NH4inletModel2_fit(params, flowdata, NH4flux):
     import objective_functions as objFun
     
-    sim_out = NH4inletModel2_fit(param, extra_param, flowdata)
+    sim_out = NH4inletModel2_fit(params, flowdata)
     MARE = objFun.MARE(NH4flux['measured'],sim_out['simNH4load'])
 
     return MARE
 
-goodnessoffit = run_NH4inletModel2_fit(params, extra_params, flowdata, NH4flux)
+goodnessoffit = run_NH4inletModel2_fit(params, flowdatacal, NH4fluxcal)
 
-def run_NH4inletModel2_fit_bnd(param, extra_param, flowdata, NH4flux, lb, ub):
+def run_NH4inletModel2_fit_bnd(params, flowdata, NH4flux, lb, ub):
     import objective_functions as objFun
-    if all(lb < param) & all(param < ub):
-        sim_out =  NH4inletModel2_fit(param, extra_param, flowdata)
+    if all(lb < params) & all(params < ub):
+        sim_out =  NH4inletModel2_fit(params, flowdata)
         MARE = objFun.MARE(NH4flux['measured'],sim_out['simNH4load'])
     else:
         MARE = 1e300
     return MARE
 
-param = np.array([('a0', 5500, 6500), 
+param = np.array([('a0', 5700, 6200), 
                  ('a1', -2000, 2000), 
                  ('a2', -2000, 2000), 
                  ('b1', -2000, 2000),
                  ('b2', -2000, 2000),
+                 ('c1', 1299, 1301),
+                 ('c2', 7.9*60, 8.1*60),
                  ('c3', 0, 1)],
                  dtype=[('name', 'U10'), ('min', 'f4'), ('max', 'f4')])
 
-goodnessOfFit = run_NH4inletModel2_fit_bnd(params, extra_params, flowdata, NH4flux, param['min'], param['max'])
+#ParBounds = [(5500, 6500), (-2000, 2000), (-2000, 2000), (-1000, 1000), (-1000, 1000), (0, 1)]
+
+goodnessOfFit = run_NH4inletModel2_fit_bnd(params, flowdatacal, NH4fluxcal, param['min'], param['max'])
 
 # %% optimization
 
 # assign starting values
-x0 = [a0,a1,a2,b1,b2,c3]
+x0 = [a0,a1,a2,b1,b2,c1,c2,c3]
 from scipy.optimize import minimize
+# from scipy.optimize import shgo
 
-# run optimizer
-resOptimizer = minimize(run_NH4inletModel2_fit_bnd, x0, args=(extra_params, flowdata, NH4flux, param['min'], param['max']), method='nelder-mead',options={'disp': True})
+# run local optimizer
+resOptimizer = minimize(run_NH4inletModel2_fit_bnd, x0, args=(flowdatacal, NH4fluxcal, param['min'], param['max']), method='nelder-mead',options={'disp': True}, tol = 1e-5)
 bestParSet= resOptimizer ['x']
 
-# rerunning with 
+# run global optimizer
+#resOptimizer = shgo(run_NH4inletModel2_fit_bnd, ParBounds, args=(extra_params, flowdatacal, NH4fluxcal, param['min'], param['max']), n=100,iters=5,options={'disp': True})
+#bestParSet2= resOptimizer ['x']
+
+# %% rerunning with best par set
+bestparams = np.zeros(8)
+bestparams[0] = bestParSet[0]
+bestparams[1] = bestParSet[1]
+bestparams[2] = bestParSet[2]
+bestparams[3] = bestParSet[3]
+bestparams[4] = bestParSet[4]
+bestparams[5] = c1
+bestparams[6] = c2
+bestparams[7] = bestParSet[7]
+outbest = NH4.NH4inletModel2(bestparams, flowdatacal)
+NH4fluxcal['model best'] = outbest['simNH4load']
+
+# %% calculating error
+# wet weather event threshold (m^3/hour)
+flowThr = 250
+
+# define events
+# you find the values of your data above the threshold
+idxFlowAboveThr = flowdatacal['flow']>flowThr # this gives you a Boolean vector
+# you need to covert the Boolean (true/false) into an integer (1/0)
+idxFlowAboveThr = idxFlowAboveThr.astype(int)
+# now calculate where there is a change in the status (from below to above the threshold or viceversa by calculating the difference between each step
+idxFlowAboveThr = idxFlowAboveThr.diff()
+# find when the flow went above the threshold (from 0 to 1)
+evStart = idxFlowAboveThr[idxFlowAboveThr>0]
+# find when the flow went below the threshold (from 1 to 0)
+evEnd = idxFlowAboveThr[idxFlowAboveThr<0]-1
+# find the indices of the event start and end
+idxEvStart = evStart.index
+idxEvEnd = evEnd.index-1 # the step before was the last one with flow above thresh
+
+# declare vectors for both simulations
+dummySimulation = np.array([]) #the array to save the aggregate results
+dummyObservation = np.array([]) #the array to save the aggregate measurements
+
+# loop over events
+for ev in range (len(idxEvStart)):
+    startDate = flowdatacal['time'][idxEvStart[ev]]
+    stopDate = flowdatacal['time'][idxEvEnd[ev]]
+    stopDate=pd.to_datetime(stopDate) + pd.DateOffset(2) # lag time
+    # find indices of the event
+    idxEv=(flowdata['time']>startDate) & (flowdata['time']<=stopDate)
+    # running a dummy simulation
+    dummySimulation = np.concatenate((dummySimulation, NH4fluxcal['model 2'][idxEv]))
+    dummyObservation = np.concatenate((dummyObservation, NH4flux['measured'][idxEv]))
+MAREbest = objFun.MARE(dummyObservation, dummySimulation)*100
+
+# %% plot observed vs simulated
+
+outbest = NH4.NH4inletModel2(bestparams, flowdataval)
+NH4fluxval['model best'] = outbest['simNH4load']
+
+plt.figure()
+plt.plot_date(flowdataval['time'], NH4fluxval['measured'], color = 'black', linestyle = '-', marker = "", label = 'measured',linewidth=1)
+plt.plot_date(outbest['time'], outbest['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'simulated',linewidth=1)
+#plt.plot_date(out0['time'], out0['simNH4load'], color = 'red', linestyle = '-', marker = "", label = 'model 0',linewidth=1)
+#plt.plot_date(flowdataval['time'], NH4fluxval['model 2'], color = 'green', linestyle = '-', marker = "", label = 'original model',linewidth=1)
+#plt.plot_date(out3['time'], out3['simNH4load'], color = 'blue', linestyle = '-', marker = "", label = 'model 3',linewidth=1)
+plt.ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
+plt.grid(True)
+plt.title('Smoothed Flux: Measured vs. Modeled, Optimized')
+plt.legend()
 
 
