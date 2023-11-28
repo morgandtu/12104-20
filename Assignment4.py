@@ -62,31 +62,34 @@ NH4flux['time'] = flowdata['time']
 
 plt.figure()
 # flow
-ax1=plt.subplot(4,1,1)
+ax1=plt.subplot(3,1,1)
 plt.plot_date(flowdata['time'], flowdata['flow'], color = 'blue', linestyle = '-', marker = "", label = 'flow')
 plt.plot_date(flowdata['time'], flowdata['smoothed'], color = 'red', linestyle = '--', marker = "", label = 'smoothed')
 ax1.set_ylabel('Flow $(m^3/hour)$') #add y-label
 plt.title('Flow and NH$4^+$ in Viby, 13/06/2018-01/08/2018')
 plt.legend()
+ax1.grid(True)
 # concentration
-ax2=plt.subplot(4,1,2)
+ax2=plt.subplot(3,1,2)
 plt.plot_date(flowdata['time'], NH4data['nh4'], color = 'red', linestyle = '-', marker = "", label = 'measured')
 ax2.set_ylabel('NH$4^+$ Concentration $(g/m^3)$') #add y-label
+ax2.grid(True)
 # flux
-ax3=plt.subplot(4,1,3)
+ax3=plt.subplot(3,1,3)
 plt.plot_date(flowdata['time'], NH4flux['measured'], color = 'green', linestyle = '-', marker = "", label = 'measured')
 ax3.set_ylabel('NH$4^+$ flux $(g/hour)$') #add y-label
-# day
-ax4=plt.subplot(4,1,4)
-plt.plot_date(flowdata['time'], flowdata['flow'], color = 'blue', linestyle = '-', marker = "")
-ax4.set_ylabel('Flow $(m^3/hour)$') #add y-label
-plt.xlim([datetime.date(2018, 6, 23), datetime.date(2018, 6, 24)])
-plt.ylim([25, 250])
-# making it look nice
-ax1.grid(True)
-ax2.grid(True)
 ax3.grid(True)
-ax4.grid(True)
+# # day
+# ax4=plt.subplot(4,1,4)
+# plt.plot_date(flowdata['time'], flowdata['flow'], color = 'blue', linestyle = '-', marker = "")
+# ax4.set_ylabel('Flow $(m^3/hour)$') #add y-label
+# plt.xlim([datetime.date(2018, 6, 23), datetime.date(2018, 6, 24)])
+# plt.ylim([25, 250])
+# # making it look nice
+# ax1.grid(True)
+# ax2.grid(True)
+# ax3.grid(True)
+# ax4.grid(True)
 
 
 # plt.figure()
@@ -161,6 +164,12 @@ out2 = NH4.NH4inletModel2(par2,flowdata)
 NH4flux['model 2'] = out2['simNH4load']
 RMSE2 = objFun.RMSE(NH4flux['measured'],NH4flux['model 2'])*100
 MARE2 = objFun.MARE(NH4flux['measured'],NH4flux['model 2'])*100
+NH4fluxcal = NH4flux.iloc[0:32335]
+NH4fluxval = NH4flux.iloc[32335:64671]
+RMSE2cal = objFun.RMSE(NH4fluxcal['measured'],NH4fluxcal['model 2'])*100
+MARE2cal = objFun.MARE(NH4fluxcal['measured'],NH4fluxcal['model 2'])*100
+RMSE2val = objFun.RMSE(NH4fluxval['measured'],NH4fluxval['model 2'])*100
+MARE2val = objFun.MARE(NH4fluxval['measured'],NH4fluxval['model 2'])*100
 
 out3 = NH4.NH4inletModel3(par3,flowdata,flowThr)
 NH4flux['model 3'] = out3['simNH4load']
@@ -209,31 +218,31 @@ for i in range(8):
 
 # Reference
 out0 = NH4.NH4inletModel2(parSample0[0,:], flowdata)
-out01 = objFun.RMSE(NH4flux['model 2'],out0['simNH4load'])+0.1
+out01 = objFun.MARE(NH4flux['model 2'],out0['simNH4load'])+0.1
 
 outA1 = NH4.NH4inletModel2(parSample0[1,:], flowdata)
-outB1 = objFun.RMSE(NH4flux['model 2'],outA1['simNH4load'])+0.1
+outB1 = objFun.MARE(NH4flux['model 2'],outA1['simNH4load'])+0.1
 
 outA2 = NH4.NH4inletModel2(parSample0[2,:], flowdata)
-outB2 = objFun.RMSE(NH4flux['model 2'],outA2['simNH4load'])+0.1
+outB2 = objFun.MARE(NH4flux['model 2'],outA2['simNH4load'])+0.1
 
 outA3 = NH4.NH4inletModel2(parSample0[3,:], flowdata)
-outB3 = objFun.RMSE(NH4flux['model 2'],outA3['simNH4load'])+0.1
+outB3 = objFun.MARE(NH4flux['model 2'],outA3['simNH4load'])+0.1
 
 outA4 = NH4.NH4inletModel2(parSample0[4,:], flowdata)
-outB4 = objFun.RMSE(NH4flux['model 2'],outA4['simNH4load'])+0.1
+outB4 = objFun.MARE(NH4flux['model 2'],outA4['simNH4load'])+0.1
 
 outA5 = NH4.NH4inletModel2(parSample0[5,:], flowdata)
-outB5 = objFun.RMSE(NH4flux['model 2'],outA5['simNH4load'])+0.1
+outB5 = objFun.MARE(NH4flux['model 2'],outA5['simNH4load'])+0.1
 
 outA6 = NH4.NH4inletModel2(parSample0[6,:], flowdata)
-outB6 = objFun.RMSE(NH4flux['model 2'],outA6['simNH4load'])+0.1
+outB6 = objFun.MARE(NH4flux['model 2'],outA6['simNH4load'])+0.1
 
 outA7 = NH4.NH4inletModel2(parSample0[7,:], flowdata)
-outB7 = objFun.RMSE(NH4flux['model 2'],outA7['simNH4load'])+0.1
+outB7 = objFun.MARE(NH4flux['model 2'],outA7['simNH4load'])+0.1
 
 outA8 = NH4.NH4inletModel2(parSample0[8,:], flowdata)
-outB8 = objFun.RMSE(NH4flux['model 2'],outA8['simNH4load'])+0.1
+outB8 = objFun.MARE(NH4flux['model 2'],outA8['simNH4load'])+0.1
 
 # Last Conc
 # RMSE
@@ -283,7 +292,7 @@ print(abs(sMorris))
 # %% Calibration
 
 # best fit values
-a0 = 6200 #6000
+a0 = 6000 #6000
 a1 = -600 #-1200
 a2 = 200 #800
 b1 = 400 #700
@@ -405,8 +414,13 @@ NH4fluxval = NH4flux.iloc[32335:64671]
 
 RMSEcalibrated = objFun.RMSE(NH4fluxcal['measured'],NH4fluxcal['model best'])*100
 RMSEvalidated = objFun.RMSE(NH4fluxval['measured'],NH4fluxval['model best'])*100
-NH4fluxval2 = NH4flux.iloc[40569:58115]
+NH4fluxval2 = NH4flux.iloc[32335:56111]
 RMSEvalidated2 = objFun.RMSE(NH4fluxval2['measured'],NH4fluxval2['model best'])*100
+
+MAREcalibrated = objFun.MARE(NH4fluxcal['measured'],NH4fluxcal['model best'])*100
+MAREvalidated = objFun.MARE(NH4fluxval['measured'],NH4fluxval['model best'])*100
+NH4fluxval2 = NH4flux.iloc[32335:56111]
+MAREvalidated2 = objFun.MARE(NH4fluxval2['measured'],NH4fluxval2['model best'])*100
 
 # %% calculating error cal--WRONG, COLLAPSE
 
